@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <list>
+#include <bits/stdc++.h>
 
 std::ifstream in;
 std::ofstream out;
@@ -36,6 +37,11 @@ int skills_count;
 std::vector<Contr> contr;
 std::vector<Proj> proj;
 std::list<Res> res;
+
+bool compare_bb(Proj p1, Proj p2)
+{
+    return (p1.bb < p2.bb);
+}
 
 int skill_id(const std::string &s)
 {
@@ -143,6 +149,8 @@ int main(int argc, char **argv)
     proj.resize(pp);
     for (Proj &p : proj)
         proj_read(p);
+
+    std::sort(proj.begin(), proj.end(), compare_bb);
 
     stupid();
     print_res();

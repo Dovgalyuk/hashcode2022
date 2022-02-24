@@ -29,7 +29,7 @@ struct Contr
 struct Res
 {
     std::string name;
-    std::list<std::string> a;
+    std::list<Contr *> a;
 };
 
 Skills skills;
@@ -94,7 +94,7 @@ bool try_proj_slow(Proj &p, Res &r)
             if (contr[c].sk[s.first] >= s.second)
             {
                 used[c] = true;
-                r.a.push_back(contr[c].name);
+                r.a.push_back(&contr[c]);
                 found = true;
                 break;
             }
@@ -114,6 +114,14 @@ void stupid()
         {
             r.name = p.name;
             res.push_back(r);
+            auto a = r.a.begin();
+            for (auto s : p.sk)
+            {
+                if ((*a)->sk[s.first] <= s.second)
+                    ++(*a)->sk[s.first];
+
+                ++a;
+            }
         }
     }
 }
@@ -126,7 +134,7 @@ void print_res()
         out << r.name << "\n";
         for (auto a : r.a)
         {
-            out << a << " ";
+            out << a->name << " ";
         }
         out << "\n";
     }

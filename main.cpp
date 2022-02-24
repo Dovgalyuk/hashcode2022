@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <list>
 
 std::ifstream in;
 std::ofstream out;
@@ -23,10 +24,17 @@ struct Contr
     SkVals sk;
 };
 
+struct Res
+{
+    std::string name;
+    std::list<std::string> a;
+};
+
 Skills skills;
 int skills_count;
 std::vector<Contr> contr;
 std::vector<Proj> proj;
+std::list<Res> res;
 
 int skill_id(const std::string &s)
 {
@@ -65,18 +73,53 @@ void proj_read(Proj &p)
     }
 }
 
+bool try_proj_slow(Proj &p, Res &r)
+{
+    std::vector<bool> used(contr.size());
+    for (auto s : p.sk)
+    {
+        bool found = false;
+        for (int c = 0 ; c < contr.size() ; ++c)
+        {
+            if (used[c])
+                continue;
+
+            if (contr[c].sk[s.first] >= s.second)
+            {
+                used[c] = true;
+                r.a.push_back(contr[c].name);
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            return false;
+    }
+    return true;
+}
+
 void stupid()
 {
-    out << proj.size() << "\n";
-    int cur = 0;
     for (Proj &p : proj)
     {
-        out << p.name << "\n";
-        int n = p.sk.size();
-        for (int i = 0 ; i < n ; ++i)
+        Res r;
+        if (try_proj_slow(p, r))
         {
-            out << contr[cur].name << " ";
-            cur = (cur + 1) % contr.size();
+            r.name = p.name;
+            res.push_back(r);
+        }
+    }
+}
+
+void print_res()
+{
+    out << res.size() << "\n";
+    for (auto r : res)
+    {
+        out << r.name << "\n";
+        for (auto a : r.a)
+        {
+            out << a << " ";
         }
         out << "\n";
     }
@@ -101,4 +144,5 @@ int main(int argc, char **argv)
         proj_read(p);
 
     stupid();
+    print_res();
 }

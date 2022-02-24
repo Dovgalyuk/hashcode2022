@@ -82,6 +82,7 @@ void proj_read(Proj &p)
 
 bool try_proj_slow(Proj &p, Res &r)
 {
+    bool mentors = false;
     std::vector<bool> used(contr.size());
     for (auto s : p.sk)
     {
@@ -100,7 +101,42 @@ bool try_proj_slow(Proj &p, Res &r)
             }
         }
         if (!found)
-            return false;
+        {
+            r.a.push_back(NULL);
+            mentors = true;
+        }
+    }
+    if (mentors)
+    {
+        auto a = r.a.begin();
+        for (auto s : p.sk)
+        {
+            // if (!*a)
+            // {
+            //     for (auto m : r.a)
+            //     {
+            //         if (m && m->sk[s.first] >= s.second)
+            //         {
+            //             for (int c = 0 ; c < contr.size() ; ++c)
+            //             {
+            //                 if (used[c])
+            //                     continue;
+            //                 if (contr[c].sk[s.first] == s.second - 1)
+            //                 {
+            //                     used[c] = true;
+            //                     *a = &contr[c];
+            //                     break;
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+            if (!*a)
+            {
+                return false;
+            }
+            ++a;
+        }
     }
     return true;
 }

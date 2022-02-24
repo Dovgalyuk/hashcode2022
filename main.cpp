@@ -65,6 +65,23 @@ void proj_read(Proj &p)
     }
 }
 
+void stupid()
+{
+    out << proj.size() << "\n";
+    int cur = 0;
+    for (Proj &p : proj)
+    {
+        out << p.name << "\n";
+        int n = p.sk.size();
+        for (int i = 0 ; i < n ; ++i)
+        {
+            out << contr[cur].name << " ";
+            cur = (cur + 1) % contr.size();
+        }
+        out << "\n";
+    }
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 3)
@@ -73,16 +90,15 @@ int main(int argc, char **argv)
     in.open(argv[1]);
     out.open(argv[2]);
 
-    int n;
-    in >> n;
-    contr.resize(n);
+    int cc, pp;
+    in >> cc >> pp;
+    contr.resize(cc);
     for (Contr &c : contr)
         contr_read(c);
 
-    in >> n;
-    proj.resize(n);
+    proj.resize(pp);
     for (Proj &p : proj)
         proj_read(p);
 
-    out << "Answer\n";
+    stupid();
 }

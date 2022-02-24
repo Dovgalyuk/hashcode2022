@@ -111,26 +111,26 @@ bool try_proj_slow(Proj &p, Res &r)
         auto a = r.a.begin();
         for (auto s : p.sk)
         {
-            // if (!*a)
-            // {
-            //     for (auto m : r.a)
-            //     {
-            //         if (m && m->sk[s.first] >= s.second)
-            //         {
-            //             for (int c = 0 ; c < contr.size() ; ++c)
-            //             {
-            //                 if (used[c])
-            //                     continue;
-            //                 if (contr[c].sk[s.first] == s.second - 1)
-            //                 {
-            //                     used[c] = true;
-            //                     *a = &contr[c];
-            //                     break;
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
+            if (!*a)
+            {
+                for (auto m : r.a)
+                {
+                    if (m && m->sk[s.first] >= s.second)
+                    {
+                        for (int c = 0 ; c < contr.size() ; ++c)
+                        {
+                            if (used[c])
+                                continue;
+                            if (contr[c].sk[s.first] == s.second - 1)
+                            {
+                                used[c] = true;
+                                *a = &contr[c];
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
             if (!*a)
             {
                 return false;
@@ -144,8 +144,10 @@ bool try_proj_slow(Proj &p, Res &r)
 void stupid()
 {
     int curtime = 0;
+    int count = 0;
     for (Proj &p : proj)
     {
+        std::cout << "Trying project " << count++ << "\n";
         if (curtime + p.days >= p.bb + p.score)
             continue;
         Res r;
@@ -163,6 +165,49 @@ void stupid()
                 ++a;
             }
         }
+    }
+}
+
+void stupid2()
+{
+    int curtime = 0;
+    std::list<Proj*> cur, next;
+    for (Proj &p : proj)
+        next.push_back(&p);
+
+    while (true)
+    {
+        cur.clear();
+        cur.swap(next);
+
+        bool added = false;
+        for (auto p : cur)
+        {
+            if (curtime + p->days >= p->bb + p->score)
+                continue;
+            Res r;
+            if (try_proj_slow(*p, r))
+            {
+                curtime += p->days;
+                r.name = p->name;
+                res.push_back(r);
+                auto a = r.a.begin();
+                for (auto s : p->sk)
+                {
+                    if ((*a)->sk[s.first] <= s.second)
+                        ++(*a)->sk[s.first];
+
+                    ++a;
+                }
+                added = true;
+            }
+            else
+            {
+                next.push_back(p);
+            }
+        }
+        if (!added)
+            break;
     }
 }
 
@@ -200,6 +245,6 @@ int main(int argc, char **argv)
 
     std::sort(proj.begin(), proj.end(), compare_bb);
 
-    stupid();
+    stupid2();
     print_res();
 }

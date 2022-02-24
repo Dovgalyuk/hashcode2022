@@ -10,12 +10,13 @@ std::ofstream out;
 
 typedef std::map<std::string, int> Skills;
 typedef std::map<int, int> SkVals;
+typedef std::vector<std::pair<int, int>> SkReqs;
 
 struct Proj
 {
     std::string name;
     int days, score, bb;
-    SkVals sk;
+    SkReqs sk;
 };
 
 struct Contr
@@ -69,7 +70,7 @@ void proj_read(Proj &p)
         std::string s;
         int sk;
         in >> s >> sk;
-        p.sk[skill_id(s)] = sk;
+        p.sk.push_back({skill_id(s), sk});
     }
 }
 

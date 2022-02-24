@@ -38,7 +38,7 @@ std::vector<Contr> contr;
 std::vector<Proj> proj;
 std::list<Res> res;
 
-bool compare_bb(Proj p1, Proj p2)
+bool compare_bb(const Proj &p1, const Proj &p2)
 {
     return (p1.bb < p2.bb);
 }

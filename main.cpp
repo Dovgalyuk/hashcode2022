@@ -143,11 +143,15 @@ bool try_proj_slow(Proj &p, Res &r)
 
 void stupid()
 {
+    int curtime = 0;
     for (Proj &p : proj)
     {
+        if (!(curtime < p.bb || curtime - p.bb < p.score))
+            continue;
         Res r;
         if (try_proj_slow(p, r))
         {
+            curtime += p.days;
             r.name = p.name;
             res.push_back(r);
             auto a = r.a.begin();

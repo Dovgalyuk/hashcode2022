@@ -146,7 +146,7 @@ void stupid()
     int curtime = 0;
     for (Proj &p : proj)
     {
-        if (!(curtime < p.bb || curtime - p.bb < p.score))
+        if (curtime + p.days >= p.bb + p.score)
             continue;
         Res r;
         if (try_proj_slow(p, r))

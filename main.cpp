@@ -1,8 +1,69 @@
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <map>
+#include <vector>
 
 std::ifstream in;
 std::ofstream out;
+
+typedef std::map<std::string, int> Skills;
+typedef std::map<int, int> SkVals;
+
+struct Proj
+{
+    std::string name;
+    int days, score, bb;
+    SkVals sk;
+};
+
+struct Contr
+{
+    std::string name;
+    SkVals sk;
+};
+
+Skills skills;
+int skills_count;
+std::vector<Contr> contr;
+std::vector<Proj> proj;
+
+int skill_id(const std::string &s)
+{
+    auto i = skills.find(s);
+    if (i == skills.end())
+    {
+        auto j = skills.insert({s, skills_count++});
+        i = j.first;
+    }
+    return i->second;
+}
+
+void contr_read(Contr &c)
+{
+    int n;
+    in >> c.name >> n;
+    for (int i = 0 ; i < n ; ++i)
+    {
+        std::string s;
+        int sk;
+        in >> s >> sk;
+        c.sk[skill_id(s)] = sk;
+    }
+}
+
+void proj_read(Proj &p)
+{
+    int n;
+    in >> p.name >> p.days >> p.score >> p.bb >> n;
+    for (int i = 0 ; i < n ; ++i)
+    {
+        std::string s;
+        int sk;
+        in >> s >> sk;
+        p.sk[skill_id(s)] = sk;
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -11,6 +72,17 @@ int main(int argc, char **argv)
 
     in.open(argv[1]);
     out.open(argv[2]);
+
+    int n;
+    in >> n;
+    contr.resize(n);
+    for (Contr &c : contr)
+        contr_read(c);
+
+    in >> n;
+    proj.resize(n);
+    for (Proj &p : proj)
+        proj_read(p);
 
     out << "Answer\n";
 }

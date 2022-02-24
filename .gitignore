@@ -1,6 +1,7 @@
 main
 debug_in
 debug_out
+outputs/*
 
 # Prerequisites
 *.d

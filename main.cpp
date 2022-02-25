@@ -18,12 +18,14 @@ struct Proj
     std::string name;
     int days, score, bb;
     SkReqs sk;
+    bool used;
 };
 
 struct Contr
 {
     std::string name;
     SkVals sk;
+    int time;
 };
 
 struct Res
@@ -40,7 +42,9 @@ std::list<Res> res;
 
 bool compare_bb(const Proj &p1, const Proj &p2)
 {
-    return (p1.bb < p2.bb);
+//    return (p1.score > p2.score);
+    return (p1.bb/* - p1.days*/ < p2.bb/* - p2.days*/);
+//    return (p1.bb - p1.days < p2.bb - p2.days);
 }
 
 int skill_id(const std::string &s)
@@ -82,6 +86,7 @@ void proj_read(Proj &p)
 
 bool try_proj_slow(Proj &p, Res &r)
 {
+    r.a.clear();
     bool mentors = false;
     std::vector<bool> used(contr.size());
     for (auto s : p.sk)
@@ -138,6 +143,305 @@ bool try_proj_slow(Proj &p, Res &r)
             ++a;
         }
     }
+    return true;
+}
+
+bool try_proj_slow2(Proj &p, Res &r)
+{
+    r.a.clear();
+    bool mentors = false;
+    std::vector<bool> used(contr.size());
+    for (auto s : p.sk)
+    {
+        int best = -1;
+        int bs = 0;
+        for (int c = 0 ; c < contr.size() ; ++c)
+        {
+            if (used[c])
+                continue;
+
+            if (contr[c].sk[s.first] >= s.second)
+            {
+                if (best == -1 || contr[c].sk[s.first] < bs)
+                {
+                    best = c;
+                    bs = contr[c].sk[s.first];
+                }
+            }
+        }
+        if (best == -1)
+        {
+            r.a.push_back(NULL);
+            mentors = true;
+        }
+        else
+        {
+            used[best] = true;
+            r.a.push_back(&contr[best]);
+        }
+    }
+    if (mentors)
+    {
+        auto a = r.a.begin();
+        for (auto s : p.sk)
+        {
+            if (!*a)
+            {
+                for (auto m : r.a)
+                {
+                    if (m && m->sk[s.first] >= s.second)
+                    {
+                        for (int c = 0 ; c < contr.size() ; ++c)
+                        {
+                            if (used[c])
+                                continue;
+                            if (contr[c].sk[s.first] == s.second - 1)
+                            {
+                                used[c] = true;
+                                *a = &contr[c];
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (!*a)
+            {
+                return false;
+            }
+            ++a;
+        }
+    }
+    return true;
+}
+
+bool try_proj_slow3(Proj &p, Res &r)
+{
+    r.a.clear();
+    std::vector<bool> used(contr.size());
+    for (auto s : p.sk)
+    {
+        bool found = false;
+        for (int c = 0 ; c < contr.size() ; ++c)
+        {
+            if (used[c])
+                continue;
+
+            if (contr[c].sk[s.first] == s.second - 1)
+            {
+                used[c] = true;
+                r.a.push_back(&contr[c]);
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+        {
+            r.a.push_back(NULL);
+        }
+    }
+    auto a = r.a.begin();
+    for (auto s : p.sk)
+    {
+        if (!*a)
+        {
+            for (int c = 0 ; c < contr.size() ; ++c)
+            {
+                if (used[c])
+                    continue;
+                if (contr[c].sk[s.first] >= s.second)
+                {
+                    used[c] = true;
+                    *a = &contr[c];
+                    break;
+                }
+            }
+        }
+        if (!*a)
+        {
+            return false;
+        }
+        ++a;
+    }
+
+    a = r.a.begin();
+    for (auto s : p.sk)
+    {
+        // should be mentored
+        if ((*a)->sk[s.first] < s.second)
+        {
+            bool found = false;
+            for (auto aa : r.a)
+            {
+                if (aa->sk[s.first] >= s.second)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool try_proj_slow5(Proj &p, Res &r)
+{
+    r.a.clear();
+    bool mentors = false;
+    std::vector<bool> used(contr.size());
+    for (auto s : p.sk)
+    {
+        int best = -1;
+        int bt = 0;
+        for (int c = 0 ; c < contr.size() ; ++c)
+        {
+            if (used[c])
+                continue;
+
+            if (contr[c].time + p.days >= p.bb + p.score)
+                continue;
+
+            if (contr[c].sk[s.first] >= s.second)
+            {
+                if (best == -1 || contr[c].time < bt)
+                {
+                    best = c;
+                    bt = contr[c].time;
+                }
+            }
+        }
+        if (best == -1)
+        {
+            r.a.push_back(NULL);
+            mentors = true;
+        }
+        else
+        {
+            used[best] = true;
+            r.a.push_back(&contr[best]);
+        }
+    }
+    if (mentors)
+    {
+        auto a = r.a.begin();
+        for (auto s : p.sk)
+        {
+            if (!*a)
+            {
+                for (auto m : r.a)
+                {
+                    if (m && m->sk[s.first] >= s.second)
+                    {
+                        int best = -1;
+                        int bt = 0;
+                        for (int c = 0 ; c < contr.size() ; ++c)
+                        {
+                            if (used[c])
+                                continue;
+
+                            if (contr[c].time + p.days >= p.bb + p.score)
+                                continue;
+
+                            if (contr[c].sk[s.first] == s.second - 1)
+                            {
+                                if (best == -1 || contr[c].time < bt)
+                                {
+                                    best = c;
+                                    bt = contr[c].time;
+                                }
+                            }
+                        }
+                        if (best != -1)
+                        {
+                            used[best] = true;
+                            *a = &contr[best];
+                        }
+                        break;
+                    }
+                }
+            }
+            if (!*a)
+            {
+                return false;
+            }
+            ++a;
+        }
+    }
+    return true;
+}
+
+bool try_proj_slow51(Proj &p, Res &r)
+{
+    r.a.clear();
+    std::vector<bool> used(contr.size());
+    for (auto s : p.sk)
+    {
+        bool found = false;
+        for (int c = 0 ; c < contr.size() ; ++c)
+        {
+            if (used[c])
+                continue;
+
+            if (contr[c].sk[s.first] == s.second - 1)
+            {
+                used[c] = true;
+                r.a.push_back(&contr[c]);
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+        {
+            r.a.push_back(NULL);
+        }
+    }
+    auto a = r.a.begin();
+    for (auto s : p.sk)
+    {
+        if (!*a)
+        {
+            for (int c = 0 ; c < contr.size() ; ++c)
+            {
+                if (used[c])
+                    continue;
+                if (contr[c].sk[s.first] >= s.second)
+                {
+                    used[c] = true;
+                    *a = &contr[c];
+                    break;
+                }
+            }
+        }
+        if (!*a)
+        {
+            return false;
+        }
+        ++a;
+    }
+
+    a = r.a.begin();
+    for (auto s : p.sk)
+    {
+        // should be mentored
+        if ((*a)->sk[s.first] < s.second)
+        {
+            bool found = false;
+            for (auto aa : r.a)
+            {
+                if (aa->sk[s.first] >= s.second)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                return false;
+        }
+    }
+
     return true;
 }
 
@@ -211,6 +515,131 @@ void stupid2()
     }
 }
 
+void stupid4()
+{
+    int curtime = 0;
+    std::list<Proj*> cur, next;
+    for (Proj &p : proj)
+        next.push_back(&p);
+
+    while (true)
+    {
+        cur.clear();
+        cur.swap(next);
+
+        bool added = false;
+        for (auto p : cur)
+        {
+            if (curtime + p->days >= p->bb + p->score)
+                continue;
+            Res r;
+            if (try_proj_slow3(*p, r) || try_proj_slow2(*p, r))
+            {
+                curtime += p->days;
+                r.name = p->name;
+                res.push_back(r);
+                auto a = r.a.begin();
+                for (auto s : p->sk)
+                {
+                    if ((*a)->sk[s.first] <= s.second)
+                        ++(*a)->sk[s.first];
+
+                    ++a;
+                }
+                added = true;
+            }
+            else
+            {
+                next.push_back(p);
+            }
+        }
+        if (!added)
+            break;
+    }
+}
+
+void stupid5()
+{
+    int curtime = 0;
+    std::list<Proj*> cur, next;
+    for (Proj &p : proj)
+        next.push_back(&p);
+
+    while (true)
+    {
+        cur.clear();
+        cur.swap(next);
+
+        bool added = false;
+        for (auto p : cur)
+        {
+            Res r;
+            if (/*try_proj_slow51(*p, r) || */try_proj_slow5(*p, r))
+            {
+                r.name = p->name;
+                res.push_back(r);
+                auto a = r.a.begin();
+                int d = 0;
+                for (auto s : p->sk)
+                {
+                    if ((*a)->sk[s.first] <= s.second)
+                        ++(*a)->sk[s.first];
+                    (*a)->time += p->days;
+                    d = std::max(d, (*a)->time);
+                    ++a;
+                }
+                for (auto aa : r.a)
+                    aa->time = d;
+                added = true;
+            }
+            else
+            {
+                next.push_back(p);
+            }
+        }
+        if (!added)
+            break;
+    }
+}
+
+void stupid3()
+{
+    int curtime = 0;
+    int i;
+    for (int i = 0 ; i < proj.size() ; )
+    {
+        Proj &p = proj[i];
+        if (p.used
+            || curtime + p.days >= p.bb + p.score)
+        {
+            ++i;
+            continue;
+        }
+        std::cout << "Trying project " << i << "\n";
+        Res r;
+        if (try_proj_slow(p, r))
+        {
+            curtime += p.days;
+            r.name = p.name;
+            res.push_back(r);
+            auto a = r.a.begin();
+            for (auto s : p.sk)
+            {
+                if ((*a)->sk[s.first] <= s.second)
+                    ++(*a)->sk[s.first];
+
+                ++a;
+            }
+            p.used = true;
+            i = 0;
+        }
+        else
+        {
+            ++i;
+        }
+    }
+}
+
 void print_res()
 {
     out << res.size() << "\n";
@@ -230,6 +659,8 @@ int main(int argc, char **argv)
     if (argc < 3)
         return 1;
 
+    //srand((int)time(NULL));
+
     in.open(argv[1]);
     out.open(argv[2]);
 
@@ -245,6 +676,6 @@ int main(int argc, char **argv)
 
     std::sort(proj.begin(), proj.end(), compare_bb);
 
-    stupid2();
+    stupid5();
     print_res();
 }
